@@ -22,7 +22,7 @@ export function useUpload() {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('resume', file);
 
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {

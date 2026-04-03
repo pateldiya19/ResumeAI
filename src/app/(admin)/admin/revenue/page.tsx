@@ -33,30 +33,30 @@ export default function AdminRevenuePage() {
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
         </div>
       ) : !data ? (
-        <p className="text-gray-400">Failed to load revenue data.</p>
+        <p className="text-zinc-400">Failed to load revenue data.</p>
       ) : (
         <>
           {/* Revenue cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <p className="text-sm text-gray-400">Total Revenue</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <p className="text-sm text-zinc-400">Total Revenue</p>
               <p className="text-3xl font-bold text-emerald-400 mt-1">${data.totalRevenue.toLocaleString()}</p>
             </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <p className="text-sm text-gray-400">This Month</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <p className="text-sm text-zinc-400">This Month</p>
               <p className="text-3xl font-bold text-blue-400 mt-1">${data.monthlyRevenue.toLocaleString()}</p>
             </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <p className="text-sm text-gray-400">Credits in Circulation</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <p className="text-sm text-zinc-400">Credits in Circulation</p>
               <p className="text-3xl font-bold text-purple-400 mt-1">{data.totalCreditsInCirculation.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Plan distribution */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <h2 className="font-semibold mb-4">Plan Distribution</h2>
             <div className="space-y-3">
               {Object.entries(data.planDistribution).map(([plan, count]) => {
@@ -65,10 +65,10 @@ export default function AdminRevenuePage() {
                 return (
                   <div key={plan}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="capitalize text-gray-300">{plan}</span>
-                      <span className="text-gray-400">{count} users ({pct}%)</span>
+                      <span className="capitalize text-zinc-300">{plan}</span>
+                      <span className="text-zinc-400">{count} users ({pct}%)</span>
                     </div>
-                    <div className="w-full bg-gray-800 rounded-full h-2">
+                    <div className="w-full bg-zinc-800 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${planColors[plan] || 'bg-gray-500'}`}
                         style={{ width: `${pct}%` }}
@@ -81,8 +81,8 @@ export default function AdminRevenuePage() {
           </div>
 
           {/* Chart placeholder */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-            <p className="text-gray-500">Revenue charts will be rendered here with Recharts</p>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
+            <p className="text-zinc-500">Revenue charts will be rendered here with Recharts</p>
           </div>
         </>
       )}

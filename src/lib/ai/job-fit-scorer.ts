@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { JOB_FIT_SCORER } from './prompts';
 
 export interface JobFitBreakdown {
@@ -25,7 +25,7 @@ export async function scoreJobFit(
     jobDescription,
   });
 
-  return callClaudeJSON<JobFitResult>(JOB_FIT_SCORER, userMessage, {
+  return callGPTJSON<JobFitResult>(JOB_FIT_SCORER, userMessage, {
     temperature: 0.3,
     maxTokens: 4096,
   });

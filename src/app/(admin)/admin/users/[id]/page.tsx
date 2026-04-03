@@ -54,55 +54,55 @@ export default function AdminUserDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
       </div>
     );
   }
 
   if (!user) {
-    return <p className="text-gray-400">User not found.</p>;
+    return <p className="text-zinc-400">User not found.</p>;
   }
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <button onClick={() => router.back()} className="text-sm text-gray-400 hover:text-white transition">
+      <button onClick={() => router.back()} className="text-sm text-zinc-400 hover:text-zinc-50 transition">
         &larr; Back to Users
       </button>
 
       {/* User card */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold">{user.name}</h1>
-            <p className="text-sm text-gray-400">{user.email}</p>
+            <p className="text-sm text-zinc-400">{user.email}</p>
           </div>
           {user.isBanned && (
-            <span className="text-xs font-bold bg-red-600 text-white px-2 py-1 rounded">BANNED</span>
+            <span className="text-xs font-bold bg-red-600 text-zinc-50 px-2 py-1 rounded">BANNED</span>
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">Plan</p>
+            <p className="text-zinc-500">Plan</p>
             <p className="font-medium capitalize">{user.plan}</p>
           </div>
           <div>
-            <p className="text-gray-500">Role</p>
+            <p className="text-zinc-500">Role</p>
             <p className="font-medium capitalize">{user.role}</p>
           </div>
           <div>
-            <p className="text-gray-500">Credits</p>
+            <p className="text-zinc-500">Credits</p>
             <p className="font-medium">{user.credits}</p>
           </div>
         </div>
 
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-zinc-500 mt-4">
           Joined {new Date(user.createdAt).toLocaleDateString()}
         </p>
       </div>
 
       {/* Actions */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
         <h2 className="font-semibold">Actions</h2>
 
         <div className="flex flex-wrap gap-3">
@@ -122,7 +122,7 @@ export default function AdminUserDetailPage() {
             value={user.plan}
             onChange={(e) => doAction('changePlan', { plan: e.target.value })}
             disabled={actionLoading}
-            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm focus:outline-none"
+            className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none"
           >
             <option value="free">Free</option>
             <option value="pro">Pro</option>
@@ -132,13 +132,13 @@ export default function AdminUserDetailPage() {
 
         <div className="flex gap-2 items-end">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Add Credits</label>
+            <label className="block text-xs text-zinc-400 mb-1">Add Credits</label>
             <input
               type="number"
               min="1"
               value={addCredits}
               onChange={(e) => setAddCredits(e.target.value)}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white w-32 focus:outline-none"
+              className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-zinc-50 w-32 focus:outline-none"
               placeholder="Amount"
             />
           </div>
@@ -158,17 +158,17 @@ export default function AdminUserDetailPage() {
       </div>
 
       {/* Recent analyses */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
         <h2 className="font-semibold mb-4">Recent Analyses</h2>
         {(!user.analyses || user.analyses.length === 0) ? (
-          <p className="text-gray-500 text-sm">No analyses.</p>
+          <p className="text-zinc-500 text-sm">No analyses.</p>
         ) : (
           <div className="space-y-2">
             {user.analyses.map((a) => (
-              <div key={a._id} className="flex items-center justify-between text-sm py-2 border-b border-gray-800 last:border-0">
+              <div key={a._id} className="flex items-center justify-between text-sm py-2 border-b border-zinc-800 last:border-0">
                 <div>
-                  <span className="text-gray-300 font-mono text-xs">{a._id.slice(-8)}</span>
-                  <span className="text-gray-500 ml-3">
+                  <span className="text-zinc-300 font-mono text-xs">{a._id.slice(-8)}</span>
+                  <span className="text-zinc-500 ml-3">
                     {new Date(a.createdAt).toLocaleDateString()}
                   </span>
                 </div>

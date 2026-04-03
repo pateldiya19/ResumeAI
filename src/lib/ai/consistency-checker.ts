@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { CONSISTENCY_CHECKER } from './prompts';
 import type { NormalizedLinkedInProfile } from '@/types/linkedin';
 
@@ -33,7 +33,7 @@ export async function checkConsistency(
     linkedInProfile,
   });
 
-  return callClaudeJSON<ConsistencyResult>(CONSISTENCY_CHECKER, userMessage, {
+  return callGPTJSON<ConsistencyResult>(CONSISTENCY_CHECKER, userMessage, {
     temperature: 0.3,
     maxTokens: 4096,
   });

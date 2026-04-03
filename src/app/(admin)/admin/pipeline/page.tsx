@@ -49,7 +49,7 @@ export default function AdminPipelinePage() {
         <h1 className="text-2xl font-bold">Pipeline Monitor</h1>
         <button
           onClick={fetchPipeline}
-          className="px-3 py-1.5 text-xs bg-gray-800 rounded-lg hover:bg-gray-700 transition"
+          className="px-3 py-1.5 text-xs bg-zinc-800 rounded-lg hover:bg-zinc-700 transition"
         >
           Refresh
         </button>
@@ -57,27 +57,27 @@ export default function AdminPipelinePage() {
 
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
         </div>
       ) : !data ? (
-        <p className="text-gray-400">Failed to load pipeline data.</p>
+        <p className="text-zinc-400">Failed to load pipeline data.</p>
       ) : (
         <>
           {/* Active count */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <p className="text-sm text-gray-400">Active Analyses</p>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <p className="text-sm text-zinc-400">Active Analyses</p>
             <p className="text-4xl font-bold text-emerald-400 mt-1">{data.active}</p>
           </div>
 
           {/* Status breakdown */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <h2 className="font-semibold mb-4">Status Breakdown</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {Object.entries(data.statusBreakdown).map(([status, count]) => (
-                <div key={status} className="flex items-center gap-3 bg-gray-800/50 rounded-lg p-3">
+                <div key={status} className="flex items-center gap-3 bg-zinc-800/50 rounded-lg p-3">
                   <div className={`w-3 h-3 rounded-full ${statusColors[status] || 'bg-gray-500'}`} />
                   <div>
-                    <p className="text-xs text-gray-400">{status.replace(/_/g, ' ')}</p>
+                    <p className="text-xs text-zinc-400">{status.replace(/_/g, ' ')}</p>
                     <p className="text-lg font-bold">{count}</p>
                   </div>
                 </div>
@@ -86,10 +86,10 @@ export default function AdminPipelinePage() {
           </div>
 
           {/* Recent failures */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <h2 className="font-semibold mb-4">Recent Failures</h2>
             {data.recentFailures.length === 0 ? (
-              <p className="text-gray-500 text-sm">No recent failures.</p>
+              <p className="text-zinc-500 text-sm">No recent failures.</p>
             ) : (
               <div className="space-y-2">
                 {data.recentFailures.map((f) => (
@@ -98,9 +98,9 @@ export default function AdminPipelinePage() {
                       <p className="text-sm font-medium text-red-300">
                         {f.target?.name || f._id.slice(-8)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{f.error || 'Unknown error'}</p>
+                      <p className="text-xs text-zinc-400 mt-0.5">{f.error || 'Unknown error'}</p>
                     </div>
-                    <span className="text-xs text-gray-500 shrink-0 ml-4">
+                    <span className="text-xs text-zinc-500 shrink-0 ml-4">
                       {new Date(f.createdAt).toLocaleString()}
                     </span>
                   </div>

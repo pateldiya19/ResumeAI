@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { ATS_SCORER } from './prompts';
 
 export interface ATSIssue {
@@ -29,7 +29,7 @@ export async function scoreATS(
     jobDescription,
   });
 
-  return callClaudeJSON<ATSResult>(ATS_SCORER, userMessage, {
+  return callGPTJSON<ATSResult>(ATS_SCORER, userMessage, {
     temperature: 0.3,
     maxTokens: 4096,
   });

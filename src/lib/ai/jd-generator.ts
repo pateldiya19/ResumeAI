@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { JD_GENERATOR } from './prompts';
 import type { ParsedJobDescription } from '@/types/jd';
 
@@ -13,7 +13,7 @@ export async function generateJobDescription(
     recruiterProfile: targetContext,
   });
 
-  return callClaudeJSON<GeneratedJobDescription>(JD_GENERATOR, userMessage, {
+  return callGPTJSON<GeneratedJobDescription>(JD_GENERATOR, userMessage, {
     temperature: 0.5,
     maxTokens: 4096,
   });

@@ -86,6 +86,7 @@ export interface EmailVariant {
 export interface AnalysisResponse {
   _id: string;
   status: AnalysisStatus;
+  errorMessage?: string;
   candidate: any;
   target: any;
   jobDescription: any;

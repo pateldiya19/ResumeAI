@@ -49,10 +49,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       credits: user.credits,
       plan: user.plan,
-      analysesUsed,
-      analysesLimit: limits.analyses,
-      sendsUsed,
-      sendsLimit: limits.sends,
+      usage: {
+        analysesUsed,
+        analysesLimit: limits.analyses,
+        sendsUsed,
+        sendsLimit: limits.sends,
+      },
       resetsAt,
     });
   } catch (error) {

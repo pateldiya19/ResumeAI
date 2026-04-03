@@ -1,8 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import { Plus, ExternalLink, Star, Pencil, Trash2, FolderKanban, Github } from 'lucide-react';
 import { useProjects } from '@/hooks/use-projects';
 import type { ProjectInput } from '@/types/project';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/page-transition';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/modal';
+import { cn } from '@/lib/cn';
 
 const emptyProject: ProjectInput = {
   title: '',
@@ -54,172 +67,189 @@ export default function ProjectsPage() {
 
     if (editingId) {
       await updateProject(editingId, data);
+      toast.success('Project updated');
     } else {
       await createProject(data);
+      toast.success('Project created');
     }
     setSaving(false);
     setShowForm(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-        <button
-          onClick={openCreate}
-          className="px-4 py-2 text-sm font-semibold text-white rounded-lg transition"
-          style={{ backgroundColor: 'hsl(160, 84%, 39%)' }}
-        >
-          + Add Project
-        </button>
-      </div>
+    <PageTransition>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {projects.length}/20 projects · Highlighted projects are included in AI resumes
+            </p>
+          </div>
+          <Button onClick={openCreate}>
+            <Plus className="w-4 h-4" />
+            Add Project
+          </Button>
+        </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
-              {editingId ? 'Edit Project' : 'Add Project'}
-            </h2>
+        {/* Modal */}
+        <Dialog open={showForm} onOpenChange={setShowForm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingId ? 'Edit Project' : 'Add Project'}</DialogTitle>
+            </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                <input
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Title *</label>
+                <Input
                   required
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="My awesome project"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                <textarea
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Description *</label>
+                <Textarea
                   required
                   rows={3}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
+                  placeholder="What does this project do?"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tech Stack (comma-separated)</label>
-                <input
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Tech Stack (comma-separated)</label>
+                <Input
                   value={techInput}
                   onChange={(e) => setTechInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="React, Node.js, MongoDB"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Live URL</label>
-                  <input
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Live URL</label>
+                  <Input
                     type="url"
                     value={form.liveUrl}
                     onChange={(e) => setForm({ ...form, liveUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="https://..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">GitHub URL</label>
-                  <input
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">GitHub URL</label>
+                  <Input
                     type="url"
                     value={form.githubUrl}
                     onChange={(e) => setForm({ ...form, githubUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="https://github.com/..."
                   />
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-                >
+                <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50"
-                  style={{ backgroundColor: 'hsl(160, 84%, 39%)' }}
-                >
+                </Button>
+                <Button type="submit" disabled={saving}>
                   {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
-                </button>
+                </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Project Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-48" />
+            ))}
           </div>
-        </div>
-      )}
+        ) : projects.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<FolderKanban className="w-7 h-7" />}
+              title="No projects yet"
+              description="Add your portfolio projects to include them in AI-optimized resumes."
+              actionLabel="Add Your First Project"
+              actionHref="#"
+            />
+          </Card>
+        ) : (
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {projects.map((p) => (
+              <StaggerItem key={p._id}>
+                <Card className="hover:shadow-md transition-all group relative">
+                  <CardContent className="p-5">
+                    {/* Star */}
+                    <button
+                      onClick={() => {
+                        toggleHighlight(p._id);
+                        toast.success(p.isHighlighted ? 'Removed from highlights' : 'Added to highlights');
+                      }}
+                      className="absolute top-4 right-4"
+                      title={p.isHighlighted ? 'Remove highlight' : 'Highlight project'}
+                    >
+                      <motion.div whileTap={{ scale: 1.3 }}>
+                        <Star
+                          className={cn(
+                            'w-5 h-5 transition-colors',
+                            p.isHighlighted
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-gray-200 hover:text-gray-300'
+                          )}
+                        />
+                      </motion.div>
+                    </button>
 
-      {/* Project Grid */}
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'hsl(160, 84%, 39%)' }} />
-        </div>
-      ) : projects.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-          <p className="text-gray-500">No projects yet. Add your first one!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projects.map((p) => (
-            <div key={p._id} className="bg-white rounded-xl border border-gray-200 p-5 relative">
-              {/* Highlight star */}
-              <button
-                onClick={() => toggleHighlight(p._id)}
-                className="absolute top-4 right-4 text-lg"
-                title={p.isHighlighted ? 'Remove highlight' : 'Highlight project'}
-              >
-                {p.isHighlighted ? (
-                  <span style={{ color: 'hsl(45, 93%, 47%)' }}>&#9733;</span>
-                ) : (
-                  <span className="text-gray-300 hover:text-gray-400">&#9734;</span>
-                )}
-              </button>
+                    <h3 className="text-base font-semibold text-gray-900 pr-8 mb-1">{p.title}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{p.description}</p>
 
-              <h3 className="text-lg font-semibold text-gray-900 pr-8">{p.title}</h3>
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{p.description}</p>
+                    {p.techStack.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {p.techStack.map((t, i) => (
+                          <Badge key={i} variant="default" className="text-[10px]">{t}</Badge>
+                        ))}
+                      </div>
+                    )}
 
-              {p.techStack.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {p.techStack.map((t, i) => (
-                    <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{t}</span>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100">
-                {p.liveUrl && (
-                  <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-medium" style={{ color: 'hsl(160, 84%, 39%)' }}>
-                    Live Demo
-                  </a>
-                )}
-                {p.githubUrl && (
-                  <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-gray-500 hover:text-gray-700">
-                    GitHub
-                  </a>
-                )}
-                <div className="flex-1" />
-                <button
-                  onClick={() => openEdit(p._id)}
-                  className="text-xs text-gray-400 hover:text-gray-600"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Delete this project?')) deleteProject(p._id);
-                  }}
-                  className="text-xs text-red-400 hover:text-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                    <div className="flex items-center gap-3 pt-3 border-t border-gray-50">
+                      {p.liveUrl && (
+                        <a href={p.liveUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700">
+                          <ExternalLink className="w-3 h-3" /> Live Demo
+                        </a>
+                      )}
+                      {p.githubUrl && (
+                        <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700">
+                          <Github className="w-3 h-3" /> GitHub
+                        </a>
+                      )}
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => openEdit(p._id)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Delete this project?')) {
+                            deleteProject(p._id);
+                            toast.success('Project deleted');
+                          }
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
+      </div>
+    </PageTransition>
   );
 }

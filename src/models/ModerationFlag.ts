@@ -98,7 +98,7 @@ const ModerationFlagSchema = new Schema<IModerationFlag>(
 );
 
 ModerationFlagSchema.index({ status: 1, createdAt: -1 });
-ModerationFlagSchema.index({ targetUserId: 1 });
+// targetUserId already indexed via `index: true` on the schema field
 ModerationFlagSchema.index({ type: 1 });
 ModerationFlagSchema.index({ autoFlagged: 1 });
 

@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { PERSONA_BUILDER } from './prompts';
 import type { NormalizedLinkedInProfile } from '@/types/linkedin';
 
@@ -24,7 +24,7 @@ export async function buildPersona(
     linkedInProfile: targetProfile,
   });
 
-  return callClaudeJSON<RecruiterPersona>(PERSONA_BUILDER, userMessage, {
+  return callGPTJSON<RecruiterPersona>(PERSONA_BUILDER, userMessage, {
     temperature: 0.7,
     maxTokens: 4096,
   });

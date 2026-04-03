@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowRight, Clock, BarChart3 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScoreGauge } from '@/components/ui/score-gauge';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PageTransition, StaggerContainer, StaggerItem } from '@/components/ui/page-transition';
 
 interface AnalysisItem {
   _id: string;
@@ -23,73 +31,75 @@ export default function HistoryPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Analysis History</h1>
+  const timeAgo = (date: string) => {
+    const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
 
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'hsl(160, 84%, 39%)' }} />
-        </div>
-      ) : analyses.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">No analyses yet.</p>
-          <Link
-            href="/analyze"
-            className="inline-block px-6 py-2.5 text-sm font-semibold text-white rounded-lg"
-            style={{ backgroundColor: 'hsl(160, 84%, 39%)' }}
-          >
-            Start Your First Analysis
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {analyses.map((a) => (
-            <Link
-              key={a._id}
-              href={`/results/${a._id}`}
-              className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {a.target?.company
-                      ? `${a.target.name || 'Recruiter'} at ${a.target.company}`
-                      : a.target?.name || 'Analysis'}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {new Date(a.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  {a.scores?.overallScore != null && (
-                    <span className="text-xl font-bold" style={{ color: 'hsl(160, 84%, 39%)' }}>
-                      {a.scores.overallScore}%
-                    </span>
-                  )}
-                  <span
-                    className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                      a.status === 'complete'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : a.status === 'failed'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}
-                  >
-                    {a.status}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
+  return (
+    <PageTransition>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Analysis History</h1>
+
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-20" />
+            ))}
+          </div>
+        ) : analyses.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<BarChart3 className="w-7 h-7" />}
+              title="No analyses yet"
+              description="Start your first analysis to see results here."
+              actionLabel="Start Your First Analysis"
+              actionHref="/analyze"
+            />
+          </Card>
+        ) : (
+          <StaggerContainer className="space-y-3">
+            {analyses.map((a) => (
+              <StaggerItem key={a._id}>
+                <Link href={`/results/${a._id}`}>
+                  <Card className="hover:shadow-md hover:ring-brand-100 transition-all cursor-pointer group">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        {a.scores?.overallScore != null ? (
+                          <ScoreGauge score={a.scores.overallScore} size="sm" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-gray-300" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {a.target?.company
+                              ? `${a.target.name || 'Recruiter'} at ${a.target.company}`
+                              : a.target?.name || 'Analysis'}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {new Date(a.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric', month: 'short', day: 'numeric',
+                            })} · {timeAgo(a.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={a.status} />
+                        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-brand-600 transition-colors" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
+      </div>
+    </PageTransition>
   );
 }

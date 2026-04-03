@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { EMAIL_GENERATOR } from './prompts';
 import type { RecruiterPersona } from './persona-builder';
 
@@ -20,7 +20,7 @@ export async function generateEmails(
 ): Promise<EmailGenerationResult> {
   const userMessage = JSON.stringify(context);
 
-  return callClaudeJSON<EmailGenerationResult>(EMAIL_GENERATOR, userMessage, {
+  return callGPTJSON<EmailGenerationResult>(EMAIL_GENERATOR, userMessage, {
     temperature: 0.7,
     maxTokens: 4096,
   });

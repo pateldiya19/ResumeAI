@@ -7,6 +7,42 @@ import { rateLimit } from '@/lib/utils/rate-limiter';
 import { checkAnalysisLimit, incrementAnalysisCount } from '@/lib/services/usage-tracker';
 import { runAnalysisPipeline } from '@/lib/services/analysis-orchestrator';
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getAuthSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50);
+    const status = searchParams.get('status');
+
+    const query: Record<string, unknown> = { userId: session.user.id };
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    const [analyses, total] = await Promise.all([
+      Analysis.find(query)
+        .select('status target.name target.company scores.overallScore createdAt updatedAt errorMessage')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Analysis.countDocuments(query),
+    ]);
+
+    return NextResponse.json(analyses);
+  } catch (error) {
+    console.error('GET /api/analyze error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const session = await getAuthSession();
   if (!session?.user) {

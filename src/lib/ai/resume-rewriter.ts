@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { RESUME_REWRITER } from './prompts';
 
 export interface RewrittenBullet {
@@ -21,7 +21,7 @@ export async function rewriteResume(
 ): Promise<RewriteResult> {
   const userMessage = JSON.stringify(context);
 
-  return callClaudeJSON<RewriteResult>(RESUME_REWRITER, userMessage, {
+  return callGPTJSON<RewriteResult>(RESUME_REWRITER, userMessage, {
     temperature: 0.7,
     maxTokens: 4096,
   });

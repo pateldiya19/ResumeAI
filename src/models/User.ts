@@ -103,8 +103,7 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-UserSchema.index({ clerkId: 1 });
-UserSchema.index({ email: 1 });
+// clerkId and email already indexed via `unique: true` on the schema field
 UserSchema.index({ role: 1 });
 UserSchema.index({ plan: 1 });
 UserSchema.index({ createdAt: -1 });
