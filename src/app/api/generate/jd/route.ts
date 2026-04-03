@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { rateLimit } from '@/lib/utils/rate-limiter';
 import { generateJobDescription } from '@/lib/ai/jd-generator';
 import type { NormalizedLinkedInProfile } from '@/types/linkedin';
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

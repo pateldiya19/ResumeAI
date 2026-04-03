@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import ModerationFlag from '@/models/ModerationFlag';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getAuthSession();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

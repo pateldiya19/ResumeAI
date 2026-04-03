@@ -1,9 +1,9 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useUser } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const adminNav = [
   { label: 'Overview', href: '/admin', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
@@ -14,19 +14,36 @@ const adminNav = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
-      router.push('/dashboard');
+    if (isLoaded && !isSignedIn) {
+      router.push('/sign-in');
+      return;
     }
-  }, [status, session, router]);
+    if (isLoaded && isSignedIn) {
+      // Check admin role via API
+      fetch('/api/user/profile')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.role === 'admin') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+            router.push('/dashboard');
+          }
+        })
+        .catch(() => {
+          setIsAdmin(false);
+          router.push('/dashboard');
+        });
+    }
+  }, [isLoaded, isSignedIn, router]);
 
-  if (status === 'loading') {
+  if (!isLoaded || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
@@ -34,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!session || session.user.role !== 'admin') return null;
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen flex bg-gray-950">

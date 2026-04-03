@@ -2,11 +2,10 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
+  clerkId: string;
   email: string;
   name: string;
   avatar?: string;
-  password?: string;
-  authProvider: 'google' | 'credentials';
   role: 'user' | 'admin';
   plan: 'free' | 'pro' | 'enterprise';
   credits: number;
@@ -23,6 +22,11 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
+    clerkId: {
+      type: String,
+      required: [true, 'Clerk ID is required'],
+      unique: true,
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -41,17 +45,6 @@ const UserSchema = new Schema<IUser>(
     avatar: {
       type: String,
       default: undefined,
-    },
-    password: {
-      type: String,
-      select: false,
-      minlength: [8, 'Password must be at least 8 characters'],
-    },
-    authProvider: {
-      type: String,
-      enum: ['google', 'credentials'],
-      required: [true, 'Auth provider is required'],
-      default: 'credentials',
     },
     role: {
       type: String,
@@ -110,6 +103,7 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+UserSchema.index({ clerkId: 1 });
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ plan: 1 });

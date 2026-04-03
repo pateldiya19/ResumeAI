@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 
@@ -11,7 +11,7 @@ const PLAN_LIMITS = {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getAuthSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

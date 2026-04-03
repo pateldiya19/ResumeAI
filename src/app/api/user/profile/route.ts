@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import { UpdateProfileSchema } from '@/lib/utils/validators';
-import bcrypt from 'bcryptjs';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getAuthSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();
     const user = await User.findById(session.user.id).select(
-      'name email avatar plan role authProvider createdAt lastActiveAt'
+      'name email avatar plan role createdAt lastActiveAt'
     );
 
     if (!user) {
@@ -28,7 +27,6 @@ export async function GET(req: NextRequest) {
       avatar: user.avatar,
       plan: user.plan,
       role: user.role,
-      authProvider: user.authProvider,
       createdAt: user.createdAt,
       lastActiveAt: user.lastActiveAt,
     });
@@ -40,7 +38,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getAuthSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -54,44 +52,14 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const { name, currentPassword, newPassword } = validation.data;
+    const { name } = validation.data;
 
     await connectDB();
 
-    // Build update object
     const updateData: Record<string, unknown> = {};
 
     if (name) {
       updateData.name = name;
-    }
-
-    // Handle password change
-    if (newPassword && currentPassword) {
-      const user = await User.findById(session.user.id).select('+password authProvider');
-      if (!user) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
-
-      if (user.authProvider !== 'credentials') {
-        return NextResponse.json(
-          { error: 'Password change is only available for email/password accounts' },
-          { status: 400 }
-        );
-      }
-
-      if (!user.password) {
-        return NextResponse.json(
-          { error: 'No password set for this account' },
-          { status: 400 }
-        );
-      }
-
-      const isValid = await bcrypt.compare(currentPassword, user.password);
-      if (!isValid) {
-        return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
-      }
-
-      updateData.password = await bcrypt.hash(newPassword, 12);
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -102,7 +70,7 @@ export async function PUT(req: NextRequest) {
       session.user.id,
       { $set: updateData },
       { new: true }
-    ).select('name email avatar plan role authProvider createdAt');
+    ).select('name email avatar plan role createdAt');
 
     if (!updatedUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -115,7 +83,6 @@ export async function PUT(req: NextRequest) {
       avatar: updatedUser.avatar,
       plan: updatedUser.plan,
       role: updatedUser.role,
-      authProvider: updatedUser.authProvider,
       createdAt: updatedUser.createdAt,
     });
   } catch (error) {

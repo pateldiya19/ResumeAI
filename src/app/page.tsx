@@ -35,13 +35,13 @@ export default function LandingPage() {
         </span>
         <div className="flex gap-4">
           <Link
-            href="/login"
+            href="/sign-in"
             className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition"
           >
             Login
           </Link>
           <Link
-            href="/register"
+            href="/sign-up"
             className="px-4 py-2 text-sm font-medium text-white rounded-lg transition"
             style={{ backgroundColor: 'hsl(160, 84%, 39%)' }}
           >
@@ -63,14 +63,14 @@ export default function LandingPage() {
         </p>
         <div className="flex gap-4 justify-center">
           <Link
-            href="/register"
+            href="/sign-up"
             className="px-8 py-3 text-lg font-semibold text-white rounded-lg shadow-lg hover:shadow-xl transition"
             style={{ backgroundColor: 'hsl(160, 84%, 39%)' }}
           >
             Get Started Free
           </Link>
           <Link
-            href="/login"
+            href="/sign-in"
             className="px-8 py-3 text-lg font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
           >
             Login

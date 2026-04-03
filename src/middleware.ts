@@ -1,34 +1,41 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhooks(.*)',
+]);
 
-  // Public routes — no auth needed
-  const publicRoutes = ['/', '/login', '/register', '/error'];
-  const isPublicRoute = publicRoutes.includes(pathname);
-  const isAuthApi = pathname.startsWith('/api/auth');
-  const isPublicAsset = pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.startsWith('/logo') || pathname.startsWith('/og-');
+const isAdminRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/api/admin(.*)',
+]);
 
-  if (isPublicRoute || isAuthApi || isPublicAsset) {
+export default clerkMiddleware(async (auth, req) => {
+  const { userId, sessionClaims } = await auth();
+
+  // Allow public routes
+  if (isPublicRoute(req)) {
     return NextResponse.next();
   }
 
-  // Check JWT token (doesn't require DB connection)
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
-  if (!token) {
-    if (pathname.startsWith('/api/')) {
+  // Require auth for all other routes
+  if (!userId) {
+    if (req.nextUrl.pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return NextResponse.redirect(new URL('/login', req.url));
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', req.nextUrl.pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
-  // Admin routes — check role from JWT
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    if (token.role !== 'admin') {
-      if (pathname.startsWith('/api/')) {
+  // Admin routes — check role from session claims
+  if (isAdminRoute(req)) {
+    const role = (sessionClaims?.metadata as { role?: string })?.role;
+    if (role !== 'admin') {
+      if (req.nextUrl.pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
       return NextResponse.redirect(new URL('/dashboard', req.url));
@@ -36,8 +43,11 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.svg|og-image.png).*)'],
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
 };

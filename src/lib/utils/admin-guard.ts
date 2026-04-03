@@ -1,16 +1,15 @@
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 interface AuthSession {
   user: {
     id: string;
+    clerkId: string;
     email: string;
     name: string;
     role: string;
     plan: string;
-    [key: string]: any;
   };
-  [key: string]: any;
 }
 
 interface AuthResult {
@@ -18,7 +17,7 @@ interface AuthResult {
 }
 
 export async function requireAdmin(): Promise<AuthResult | NextResponse> {
-  const session = (await auth()) as AuthSession | null;
+  const session = await getAuthSession();
 
   if (!session?.user) {
     return NextResponse.json(
@@ -38,7 +37,7 @@ export async function requireAdmin(): Promise<AuthResult | NextResponse> {
 }
 
 export async function requireAuth(): Promise<AuthResult | NextResponse> {
-  const session = (await auth()) as AuthSession | null;
+  const session = await getAuthSession();
 
   if (!session?.user) {
     return NextResponse.json(

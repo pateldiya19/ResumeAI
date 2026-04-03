@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCredits } from '@/hooks/use-credits';
@@ -14,7 +14,7 @@ interface RecentAnalysis {
 }
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { user } = useUser();
   const { credits, plan, usage, isLoading: creditsLoading } = useCredits();
   const [recent, setRecent] = useState<RecentAnalysis[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
@@ -38,7 +38,7 @@ export default function DashboardPage() {
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {session?.user?.name || 'there'}
+          Welcome back, {user?.firstName || 'there'}
         </h1>
         <p className="text-gray-500 mt-1">Here is an overview of your account.</p>
       </div>

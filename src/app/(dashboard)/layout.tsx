@@ -1,7 +1,7 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useUser, UserButton, SignOutButton } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -21,18 +21,22 @@ const planColors: Record<string, string> = {
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [plan, setPlan] = useState('free');
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    }
-  }, [status, router]);
+    // Fetch user plan from API
+    fetch('/api/user/credits')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.plan) setPlan(data.plan);
+      })
+      .catch(() => {});
+  }, []);
 
-  if (status === 'loading') {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'hsl(160, 84%, 39%)' }} />
@@ -40,9 +44,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  if (!session) return null;
+  if (!isSignedIn) return null;
 
-  const user = session.user;
+  const displayName = user.fullName || user.primaryEmailAddress?.emailAddress || 'User';
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -99,13 +103,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-end px-6 gap-3">
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${planColors[user.plan] || planColors.free}`}>
-            {user.plan?.toUpperCase()}
+          <span className={`text-xs font-medium px-2 py-1 rounded-full ${planColors[plan] || planColors.free}`}>
+            {plan.toUpperCase()}
           </span>
-          <span className="text-sm text-gray-700 font-medium">{user.name || user.email}</span>
-          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold" style={{ color: 'hsl(160, 84%, 39%)' }}>
-            {(user.name || user.email || '?')[0].toUpperCase()}
-          </div>
+          <span className="text-sm text-gray-700 font-medium">{displayName}</span>
+          <UserButton />
         </header>
 
         {/* Content */}

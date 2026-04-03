@@ -183,7 +183,6 @@ export async function getUsersList(params: UserListParams): Promise<UserListResu
       },
       {
         $project: {
-          password: 0,
           analyses: 0,
         },
       },
@@ -205,7 +204,7 @@ export async function getUserDetail(userId: string): Promise<any> {
   const objectId = new mongoose.Types.ObjectId(userId);
 
   const [user, analyses, projects, flags, applications] = await Promise.all([
-    User.findById(objectId).select('-password').lean(),
+    User.findById(objectId).lean(),
     Analysis.find({ userId: objectId })
       .sort({ createdAt: -1 })
       .select('status scores.overallScore jobDescription.title target.company createdAt')
@@ -292,9 +291,7 @@ export async function updateUser(userId: string, action: AdminAction): Promise<a
 
   await user.save();
 
-  const result = user.toObject();
-  delete result.password;
-  return result;
+  return user.toObject();
 }
 
 export async function getPipelineStatus(): Promise<PipelineStatus> {

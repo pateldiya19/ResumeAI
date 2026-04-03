@@ -1,16 +1,5 @@
 import { z } from 'zod';
 
-export const RegisterSchema = z.object({
-  name: z.string().min(2).max(50),
-  email: z.string().email(),
-  password: z.string().min(6).max(100),
-});
-
-export const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
 export const AnalyzeSchema = z.object({
   resumeText: z.string().min(50),
   resumeFileName: z.string(),
@@ -68,14 +57,7 @@ export const ProjectSchema = z.object({
 
 export const UpdateProfileSchema = z.object({
   name: z.string().min(2).max(50).optional(),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().min(6).max(100).optional(),
-}).refine((data) => {
-  if (data.newPassword && !data.currentPassword) {
-    return false;
-  }
-  return true;
-}, { message: 'Current password is required to set a new password', path: ['currentPassword'] });
+});
 
 export const AdminUserActionSchema = z.object({
   action: z.enum(['ban', 'unban', 'change_plan', 'add_credits']),
@@ -90,8 +72,6 @@ export const ModerationActionSchema = z.object({
 });
 
 // Inferred types for convenience
-export type RegisterInput = z.infer<typeof RegisterSchema>;
-export type LoginInput = z.infer<typeof LoginSchema>;
 export type AnalyzeInput = z.infer<typeof AnalyzeSchema>;
 export type SendEmailInput = z.infer<typeof SendEmailSchema>;
 export type ProjectInput = z.infer<typeof ProjectSchema>;

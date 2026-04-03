@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getAuthSession } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import Analysis from '@/models/Analysis';
 import { AnalyzeSchema } from '@/lib/utils/validators';
@@ -8,7 +8,7 @@ import { checkAnalysisLimit, incrementAnalysisCount } from '@/lib/services/usage
 import { runAnalysisPipeline } from '@/lib/services/analysis-orchestrator';
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await getAuthSession();
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
