@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from 'react';
 
-
+interface FlaggedItem {
+  _id: string;
+  type: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: string;
+}
 
 export default function AdminModerationPage() {
   const [items, setItems] = useState<FlaggedItem[]>([]);
