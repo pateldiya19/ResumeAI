@@ -1,4 +1,4 @@
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { JD_PARSER } from '@/lib/ai/prompts';
 import { ParsedJobDescription } from '@/types/jd';
 
@@ -11,7 +11,7 @@ export async function parseJobDescription(
     );
   }
 
-  const parsed = await callClaudeJSON<Record<string, unknown>>(
+  const parsed = await callGPTJSON<Record<string, unknown>>(
     JD_PARSER,
     rawText.trim()
   );
