@@ -10,7 +10,7 @@ import {
   Send,
   AlertTriangle,
   XCircle,
-  Sparkles,
+  BarChart3,
   FileText,
   Mail,
   User,
@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageTransition } from '@/components/ui/page-transition';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ComposeEmailCard } from '@/components/ui/compose-email/compose-email-card';
 import { cn } from '@/lib/cn';
 import type { AnalysisStatus } from '@/types/analysis';
 
@@ -54,7 +55,7 @@ const statusLabels: Record<string, string> = {
 type Tab = 'scores' | 'resume' | 'emails' | 'persona' | 'actions';
 
 const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'scores', label: 'Scores', icon: Sparkles },
+  { key: 'scores', label: 'Scores', icon: BarChart3 },
   { key: 'resume', label: 'Resume', icon: FileText },
   { key: 'emails', label: 'Emails', icon: Mail },
   { key: 'persona', label: 'Persona', icon: User },
@@ -118,7 +119,7 @@ export default function ResultsPage() {
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               className="w-16 h-16 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-5"
             >
-              <Sparkles className="w-8 h-8 text-brand-600" />
+              <BarChart3 className="w-8 h-8 text-brand-600" />
             </motion.div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Analysis in Progress</h1>
             <p className="text-sm text-gray-500">This usually takes 30-60 seconds.</p>
@@ -361,10 +362,16 @@ export default function ResultsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <ScoreBar label="Keyword Match" value={scores.atsBreakdown.keywordMatch} />
-                      <ScoreBar label="Formatting" value={scores.atsBreakdown.formatting} />
-                      <ScoreBar label="Structure" value={scores.atsBreakdown.sectionStructure} />
-                      <ScoreBar label="Parsability" value={scores.atsBreakdown.parsability} />
+                      {scores.atsBreakdown ? (
+                        <>
+                          <ScoreBar label="Keyword Match" value={scores.atsBreakdown.keywordMatch} />
+                          <ScoreBar label="Formatting" value={scores.atsBreakdown.formatting} />
+                          <ScoreBar label="Structure" value={scores.atsBreakdown.sectionStructure} />
+                          <ScoreBar label="Parsability" value={scores.atsBreakdown.parsability} />
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400">No breakdown available</p>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -376,10 +383,16 @@ export default function ResultsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <ScoreBar label="Skills" value={scores.jobFitBreakdown.skillCoverage} />
-                      <ScoreBar label="Experience" value={scores.jobFitBreakdown.experienceAlignment} />
-                      <ScoreBar label="Seniority" value={scores.jobFitBreakdown.seniorityMatch} />
-                      <ScoreBar label="Industry" value={scores.jobFitBreakdown.industryRelevance} />
+                      {scores.jobFitBreakdown ? (
+                        <>
+                          <ScoreBar label="Skills" value={scores.jobFitBreakdown.skillCoverage} />
+                          <ScoreBar label="Experience" value={scores.jobFitBreakdown.experienceAlignment} />
+                          <ScoreBar label="Seniority" value={scores.jobFitBreakdown.seniorityMatch} />
+                          <ScoreBar label="Industry" value={scores.jobFitBreakdown.industryRelevance} />
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400">No breakdown available</p>
+                      )}
                     </CardContent>
                   </Card>
 
@@ -391,7 +404,7 @@ export default function ResultsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {scores.consistencyIssues.length === 0 ? (
+                      {!scores.consistencyIssues || scores.consistencyIssues.length === 0 ? (
                         <div className="flex items-center gap-2 text-sm text-emerald-600">
                           <Check className="w-4 h-4" />
                           No issues found
@@ -424,7 +437,7 @@ export default function ResultsPage() {
                 <Card className="border-l-4 border-l-brand-500">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Sparkles className="w-4 h-4 text-brand-600" />
+                      <BarChart3 className="w-4 h-4 text-brand-600" />
                       AI Professional Summary
                     </CardTitle>
                   </CardHeader>
@@ -524,6 +537,23 @@ export default function ResultsPage() {
             {/* ── EMAILS TAB ── */}
             {activeTab === 'emails' && (
               <div className="space-y-4">
+                {/* Recruiter email status */}
+                <Card className={canSendEmail ? 'border-emerald-200 bg-emerald-50/30' : 'border-amber-200 bg-amber-50/30'}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${canSendEmail ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                      <Mail className={`w-4 h-4 ${canSendEmail ? 'text-emerald-600' : 'text-amber-600'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${canSendEmail ? 'text-emerald-800' : 'text-amber-800'}`}>
+                        {canSendEmail ? 'Recruiter email found — you can send directly' : 'Recruiter email not found — copy and send manually'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {canSendEmail ? 'Click "Send" on any email below to deliver it via ResumeAI' : 'Use the "Copy" button to copy the email and paste it in your email client'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {generatedEmails.length === 0 ? (
                   <Card className="p-12 text-center">
                     <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
@@ -531,71 +561,34 @@ export default function ResultsPage() {
                   </Card>
                 ) : (
                   generatedEmails.map((email, idx) => (
-                    <motion.div
+                    <ComposeEmailCard
                       key={idx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                    >
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-5">
-                          <div className="flex items-center justify-between mb-4">
-                            <Badge
-                              variant={
-                                email.tone === 'professional' ? 'blue' :
-                                email.tone === 'conversational' ? 'warning' : 'purple'
-                              }
-                            >
-                              {email.tone.replace('_', ' ')}
-                            </Badge>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copyEmail(idx)}
-                              >
-                                {copiedIdx === idx ? (
-                                  <><Check className="w-3.5 h-3.5" /> Copied</>
-                                ) : (
-                                  <><Copy className="w-3.5 h-3.5" /> Copy</>
-                                )}
-                              </Button>
-                              {canSendEmail && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => sendEmail(idx)}
-                                  disabled={sendingIdx === idx}
-                                >
-                                  {sendingIdx === idx ? (
-                                    <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Sending</>
-                                  ) : (
-                                    <><Send className="w-3.5 h-3.5" /> Send</>
-                                  )}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-
-                          <p className="text-sm font-semibold text-gray-900 mb-3">
-                            Subject: {email.subject}
-                          </p>
-                          <div className="rounded-xl bg-gray-50 p-4 mb-3">
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                              {email.body}
-                            </p>
-                          </div>
-
-                          {email.matchPoints.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                              <span className="text-xs text-gray-400 font-medium mr-1">Match points:</span>
-                              {email.matchPoints.map((p, i) => (
-                                <Badge key={i} variant="default" className="text-[10px]">{p}</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
+                      data={{
+                        from: { name: analysis.candidate?.name || 'You', email: '' },
+                        to: { name: analysis.target?.name || 'Recruiter', email: '' },
+                        subject: email.subject,
+                        body: email.body,
+                        tone: email.tone,
+                      }}
+                      onCopy={() => copyEmail(idx)}
+                      onSend={() => sendEmail(idx)}
+                      onFavorite={async () => {
+                        try {
+                          const res = await fetch(`/api/analyze/${id}/favorite`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ emailIndex: idx, isFavorite: !email.isFavorite }),
+                          });
+                          if (res.ok) {
+                            toast.success(email.isFavorite ? 'Removed from favorites' : 'Saved to Applications');
+                            window.location.reload();
+                          }
+                        } catch { toast.error('Failed to update'); }
+                      }}
+                      isFavorite={!!email.isFavorite}
+                      isSending={sendingIdx === idx}
+                      canSend={canSendEmail}
+                    />
                   ))
                 )}
               </div>
@@ -603,96 +596,80 @@ export default function ResultsPage() {
 
             {/* ── PERSONA TAB ── */}
             {activeTab === 'persona' && recruiterPersona && (
-              <div className="space-y-5">
-                {/* Header card */}
-                <Card className="overflow-hidden">
-                  <div className="h-20 bg-gradient-to-r from-brand-600 to-blue-500" />
-                  <CardContent className="pt-0 -mt-10 pb-6 px-6">
-                    <div className="flex items-end gap-4 mb-4">
-                      <div className="w-20 h-20 rounded-2xl bg-white ring-4 ring-white flex items-center justify-center text-2xl font-bold text-brand-600 shadow-lg">
+              <div className="space-y-4">
+                {/* Profile card */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-blue-500 flex items-center justify-center text-xl font-bold text-white shrink-0">
                         {recruiterPersona.name?.[0] || '?'}
                       </div>
-                      <div className="pb-1">
-                        <h2 className="text-xl font-bold text-gray-900">{recruiterPersona.name}</h2>
-                        <p className="text-sm text-gray-500">{recruiterPersona.headline}</p>
-                        <p className="text-sm font-semibold text-brand-600">{recruiterPersona.company}</p>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold text-gray-900">{recruiterPersona.name}</h2>
+                        <p className="text-sm text-gray-500 truncate">{recruiterPersona.headline}</p>
+                        <p className="text-sm font-medium text-brand-600">{recruiterPersona.company}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="purple">{recruiterPersona.communicationStyle} style</Badge>
+                          {canSendEmail && <Badge variant="success">Email available</Badge>}
+                        </div>
                       </div>
                     </div>
-
-                    <Badge variant={
-                      recruiterPersona.communicationStyle === 'formal' ? 'blue' :
-                      recruiterPersona.communicationStyle === 'casual' ? 'success' : 'purple'
-                    }>
-                      {recruiterPersona.communicationStyle} communicator
-                    </Badge>
                   </CardContent>
                 </Card>
 
-                {/* Info grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Approach */}
+                {recruiterPersona.recommendedApproach && (
                   <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Recommended Approach</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-5">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-2">How to Approach</h3>
                       <p className="text-sm text-gray-600 leading-relaxed">{recruiterPersona.recommendedApproach}</p>
                     </CardContent>
                   </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Priorities</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recruiterPersona.priorities.map((p, i) => (
-                          <Badge key={i} variant="success">{p}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Pain Points</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recruiterPersona.painPoints.map((p, i) => (
-                          <Badge key={i} variant="error">{p}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Recent Topics</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recruiterPersona.recentTopics.map((t, i) => (
-                          <Badge key={i} variant="blue">{t}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {recruiterPersona.culturalSignals?.length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Cultural Signals</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recruiterPersona.culturalSignals.map((s, i) => (
-                          <Badge key={i} variant="purple">{s}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
                 )}
+
+                {/* Tags grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {recruiterPersona.priorities?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Priorities</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {recruiterPersona.priorities.map((p, i) => <Badge key={i} variant="success" className="text-xs">{p}</Badge>)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {recruiterPersona.painPoints?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pain Points</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {recruiterPersona.painPoints.map((p, i) => <Badge key={i} variant="error" className="text-xs">{p}</Badge>)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {recruiterPersona.recentTopics?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Recent Topics</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {recruiterPersona.recentTopics.map((t, i) => <Badge key={i} variant="blue" className="text-xs">{t}</Badge>)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {recruiterPersona.culturalSignals?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Cultural Signals</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {recruiterPersona.culturalSignals.map((s, i) => <Badge key={i} variant="purple" className="text-xs">{s}</Badge>)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
             )}
 
