@@ -1,338 +1,108 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
-import { Upload, Link2, Target, FileText, Check, X, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
-import { useUpload } from '@/hooks/use-upload';
-import { useStartAnalysis } from '@/hooks/use-analysis';
+import { FileText, Target, Rocket, ArrowRight, Check, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { PageTransition } from '@/components/ui/page-transition';
 import { cn } from '@/lib/cn';
 
-const steps = [
-  { label: 'Upload Resume', icon: Upload },
-  { label: 'LinkedIn URLs', icon: Link2 },
-  { label: 'Job Description', icon: FileText },
+const modes = [
+  {
+    title: 'Resume Check',
+    subtitle: 'Instant ATS health score',
+    description: 'Detailed section analysis, formatting issues, and bullet improvement suggestions.',
+    icon: FileText,
+    href: '/analyze/resume-check',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'hover:border-blue-200',
+    time: '~15 sec',
+    features: ['ATS compatibility score', 'Section-by-section breakdown', 'Bullet improvements', 'Formatting issues'],
+  },
+  {
+    title: 'Job Match',
+    subtitle: 'Resume vs job description',
+    description: 'Compare your resume against a specific job posting with skill gap analysis.',
+    icon: Target,
+    href: '/analyze/job-match',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'hover:border-purple-200',
+    time: '~20 sec',
+    features: ['Job fit score + radar chart', 'Matched & missing skills', 'Keyword gap analysis', 'Tailored bullet rewrites'],
+  },
+  {
+    title: 'Full Application',
+    subtitle: 'Complete pipeline',
+    description: 'Analyze a recruiter, generate personalized emails, and optimize your resume.',
+    icon: Rocket,
+    href: '/analyze/full-application',
+    color: 'text-brand-600',
+    bgColor: 'bg-brand-50',
+    borderColor: 'hover:border-brand-200',
+    time: '~60 sec',
+    features: ['Recruiter persona analysis', '3 personalized cold emails', 'Resume optimization', 'One-click email sending'],
+  },
 ];
 
-export default function AnalyzePage() {
-  const router = useRouter();
-  const { upload, isUploading, progress, error: uploadError, result: uploadResult, reset: resetUpload } = useUpload();
-  const { startAnalysis, isStarting, error: analysisError } = useStartAnalysis();
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [candidateLinkedIn, setCandidateLinkedIn] = useState('');
-  const [targetLinkedIn, setTargetLinkedIn] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [jdMode, setJdMode] = useState<'paste' | 'auto'>('auto');
-  const [dragActive, setDragActive] = useState(false);
-
-  // Compute current step
-  const currentStep = !uploadResult ? 0 : !targetLinkedIn ? 1 : 2;
-
-  const handleFile = async (file: File) => {
-    const validTypes = [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain',
-    ];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a PDF, DOCX, or TXT file.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size must be under 10MB.');
-      return;
-    }
-    await upload(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!uploadResult) return;
-
-    const result = await startAnalysis({
-      resumeText: uploadResult.rawText,
-      resumeFileName: uploadResult.fileName,
-      candidateLinkedInUrl: candidateLinkedIn || undefined,
-      targetLinkedInUrl: targetLinkedIn,
-      jobDescriptionText: jdMode === 'paste' ? jobDescription || undefined : undefined,
-    });
-
-    if (result?._id) {
-      toast.success('Analysis started!');
-      router.push(`/results/${result._id}`);
-    } else if (analysisError) {
-      toast.error(analysisError);
-    }
-  };
-
-  const error = uploadError || analysisError;
-
+export default function AnalyzeLandingPage() {
   return (
     <PageTransition>
-      <div className="max-w-2xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">New Analysis</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Upload your resume, provide the target recruiter, and let AI do the rest.
-          </p>
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-10">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Choose Analysis Mode</h1>
+          <p className="text-sm text-gray-500">Each mode builds on the previous. Start with a quick check or go full pipeline.</p>
         </div>
 
-        {/* Step indicator */}
-        <div className="flex items-center gap-2">
-          {steps.map((step, i) => {
-            const Icon = step.icon;
-            const isComplete = i < currentStep;
-            const isCurrent = i === currentStep;
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {modes.map((mode, i) => {
+            const Icon = mode.icon;
             return (
-              <div key={step.label} className="flex items-center gap-2 flex-1">
-                <div
-                  className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all',
-                    isComplete && 'bg-brand-600 text-white',
-                    isCurrent && 'bg-brand-100 text-brand-700 ring-2 ring-brand-300',
-                    !isComplete && !isCurrent && 'bg-gray-100 text-gray-400'
-                  )}
-                >
-                  {isComplete ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                </div>
-                <span className={cn(
-                  'text-xs font-medium hidden sm:block',
-                  isCurrent ? 'text-brand-700' : isComplete ? 'text-gray-900' : 'text-gray-400'
-                )}>
-                  {step.label}
-                </span>
-                {i < steps.length - 1 && (
-                  <div className={cn(
-                    'flex-1 h-px',
-                    i < currentStep ? 'bg-brand-300' : 'bg-gray-200'
-                  )} />
-                )}
-              </div>
+              <motion.div
+                key={mode.title}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <Link href={mode.href} className="block h-full">
+                  <Card className={cn('group h-full border border-gray-200 hover:shadow-lg transition-all cursor-pointer', mode.borderColor)}>
+                    <CardContent className="p-5 flex flex-col h-full">
+                      {/* Icon + time */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', mode.bgColor)}>
+                          <Icon className={cn('w-5 h-5', mode.color)} />
+                        </div>
+                        <span className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
+                          <Clock className="w-3 h-3" />{mode.time}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-bold text-gray-900 mb-0.5">{mode.title}</h3>
+                      <p className="text-xs text-gray-400 mb-3">{mode.subtitle}</p>
+                      <p className="text-sm text-gray-500 mb-4 leading-relaxed flex-1">{mode.description}</p>
+
+                      {/* Features */}
+                      <div className="space-y-2 mb-4">
+                        {mode.features.map((f) => (
+                          <div key={f} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <span className="text-xs text-gray-600">{f}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900 group-hover:text-brand-600 transition-colors mt-auto pt-3 border-t border-gray-100">
+                        Start Analysis
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
             );
           })}
         </div>
-
-        {error && (
-          <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
-            <X className="w-4 h-4 shrink-0" />
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Step 1: File Upload */}
-          <Card>
-            <CardContent className="p-5">
-              <label className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold">1</span>
-                Resume Upload <span className="text-red-500">*</span>
-              </label>
-
-              {!uploadResult ? (
-                <div
-                  className={cn(
-                    'mt-3 border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all',
-                    dragActive
-                      ? 'border-brand-500 bg-brand-50/50'
-                      : 'border-gray-200 hover:border-brand-300 hover:bg-brand-50/20'
-                  )}
-                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-                  onDragLeave={() => setDragActive(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx,.txt"
-                    className="hidden"
-                    onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-                  />
-                  {isUploading ? (
-                    <div>
-                      <Loader2 className="w-8 h-8 text-brand-600 mx-auto mb-3 animate-spin" />
-                      <p className="text-sm text-gray-600 mb-2">Uploading... {progress}%</p>
-                      <div className="max-w-xs mx-auto w-full bg-gray-100 rounded-full h-1.5">
-                        <motion.div
-                          className="h-1.5 rounded-full bg-brand-600"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="w-14 h-14 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-4">
-                        <Upload className="w-6 h-6 text-brand-600" />
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        Drag & drop your resume or{' '}
-                        <span className="font-semibold text-brand-600">browse</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">PDF, DOCX, or TXT (max 10MB)</p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-3 flex items-center justify-between bg-brand-50/50 ring-1 ring-brand-200/50 rounded-xl p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-brand-100 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-brand-700" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-900">{uploadResult.fileName}</span>
-                      <p className="text-xs text-gray-500">{uploadResult.fileType?.toUpperCase()}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={resetUpload}
-                    className="text-xs text-gray-400 hover:text-gray-600 font-medium"
-                  >
-                    Remove
-                  </button>
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Step 2: LinkedIn URLs */}
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold">2</span>
-                LinkedIn URLs
-              </label>
-
-              <div>
-                <label htmlFor="candidateLinkedIn" className="block text-xs font-medium text-gray-500 mb-1.5">
-                  Your LinkedIn URL <span className="text-gray-400">(optional)</span>
-                </label>
-                <Input
-                  id="candidateLinkedIn"
-                  type="url"
-                  value={candidateLinkedIn}
-                  onChange={(e) => setCandidateLinkedIn(e.target.value)}
-                  placeholder="https://linkedin.com/in/yourprofile"
-                />
-                <p className="text-xs text-gray-400 mt-1">Used for cross-referencing with your resume</p>
-              </div>
-
-              <div>
-                <label htmlFor="targetLinkedIn" className="block text-xs font-medium text-gray-500 mb-1.5">
-                  Target Recruiter LinkedIn URL <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="targetLinkedIn"
-                  type="url"
-                  required
-                  value={targetLinkedIn}
-                  onChange={(e) => setTargetLinkedIn(e.target.value)}
-                  placeholder="https://linkedin.com/in/recruiter"
-                />
-                <p className="text-xs text-gray-400 mt-1">Paste the LinkedIn URL of who you want to reach</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Step 3: Job Description */}
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-[10px] font-bold">3</span>
-                Job Description <span className="text-gray-400 font-normal text-xs">(optional)</span>
-              </label>
-
-              {/* Toggle */}
-              <div className="flex gap-2 bg-gray-50 p-1 rounded-xl w-fit">
-                <button
-                  type="button"
-                  onClick={() => setJdMode('auto')}
-                  className={cn(
-                    'px-4 py-1.5 text-xs font-medium rounded-lg transition-all',
-                    jdMode === 'auto' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                  )}
-                >
-                  <Sparkles className="w-3.5 h-3.5 inline mr-1.5" />
-                  Auto-generate
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJdMode('paste')}
-                  className={cn(
-                    'px-4 py-1.5 text-xs font-medium rounded-lg transition-all',
-                    jdMode === 'paste' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-                  )}
-                >
-                  <FileText className="w-3.5 h-3.5 inline mr-1.5" />
-                  Paste JD
-                </button>
-              </div>
-
-              {jdMode === 'paste' ? (
-                <Textarea
-                  rows={5}
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the job description here..."
-                />
-              ) : (
-                <div className="rounded-xl bg-brand-50/50 p-4 ring-1 ring-brand-100 flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-brand-800">AI will generate a JD</p>
-                    <p className="text-xs text-brand-600/70 mt-0.5">
-                      Based on the recruiter&apos;s profile, company, and role context.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Submit */}
-          <Button
-            type="submit"
-            size="lg"
-            variant="gradient"
-            className="w-full shadow-lg shadow-brand-500/20"
-            disabled={!uploadResult || !targetLinkedIn || isStarting}
-          >
-            {isStarting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Starting Analysis...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                Analyze Resume
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </form>
       </div>
     </PageTransition>
   );
