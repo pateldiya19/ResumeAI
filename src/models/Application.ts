@@ -98,7 +98,6 @@ const ApplicationSchema = new Schema<IApplication>(
 
 ApplicationSchema.index({ userId: 1, createdAt: -1 });
 ApplicationSchema.index({ status: 1 });
-ApplicationSchema.index({ analysisId: 1 });
 
 const Application: Model<IApplication> =
   mongoose.models.Application ||

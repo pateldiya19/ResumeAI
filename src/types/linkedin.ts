@@ -4,6 +4,8 @@ export interface LinkedInExperience {
   startDate: string;
   endDate: string;
   description: string;
+  location?: string;
+  isCurrent?: boolean;
 }
 
 export interface LinkedInPost {
@@ -11,6 +13,7 @@ export interface LinkedInPost {
   date: string;
   likes: number;
   comments: number;
+  shares?: number;
 }
 
 export interface LinkedInProfile {
