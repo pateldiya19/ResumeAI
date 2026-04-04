@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Mode 3 (Full Application) — existing schema, UNCHANGED
 export const AnalyzeSchema = z.object({
   resumeText: z.string().min(50),
   resumeFileName: z.string(),
@@ -18,6 +19,22 @@ export const AnalyzeSchema = z.object({
     .string()
     .optional()
     .or(z.literal('')),
+});
+
+// Mode 1 (Resume Only) — only resume is required
+export const Mode1AnalyzeSchema = z.object({
+  mode: z.literal('resume_only'),
+  resumeText: z.string().min(50, 'Resume text must be at least 50 characters'),
+  resumeFileName: z.string().min(1, 'Resume file name is required'),
+  targetLinkedInUrl: z.string().url().optional(),
+});
+
+// Mode 2 (Job Analysis) — resume + JD required
+export const Mode2AnalyzeSchema = z.object({
+  mode: z.literal('job_analysis'),
+  resumeText: z.string().min(50, 'Resume text must be at least 50 characters'),
+  resumeFileName: z.string().min(1, 'Resume file name is required'),
+  jobDescriptionText: z.string().min(30, 'Job description must be at least 30 characters'),
 });
 
 export const SendEmailSchema = z.object({

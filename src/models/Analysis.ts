@@ -66,6 +66,7 @@ export interface IEmailVariant {
   openingHook: string;
   matchPoints: string[];
   cta: string;
+  isFavorite?: boolean;
 }
 
 export interface IExperience {
@@ -105,6 +106,7 @@ export interface ILinkedInPost {
 export interface IAnalysis extends Document {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
+  mode: 'resume_only' | 'job_analysis' | 'full_application';
   status:
     | 'pending'
     | 'scraping_candidate'
@@ -160,6 +162,28 @@ export interface IAnalysis extends Document {
   optimizedResume?: IOptimizedResume;
   recruiterPersona?: IRecruiterPersona;
   generatedEmails: IEmailVariant[];
+  mode1Results?: {
+    atsScore: number;
+    atsLabel: string;
+    formattingIssues: Array<{ type: string; message: string }>;
+    missingSections: string[];
+    weakBullets: Array<{ original: string; suggestion: string }>;
+    sectionScores: {
+      contactInfo: number;
+      formatting: number;
+      actionVerbs: number;
+      quantification: number;
+      sectionStructure: number;
+    };
+    overallVerdict: string;
+  };
+  mode2Results?: {
+    jobFitScore: number;
+    jobFitLabel: string;
+    skillGaps: string[];
+    experienceGaps: string[];
+    recommendations: string[];
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -214,13 +238,11 @@ const ConsistencyIssueSchema = new Schema(
   {
     type: {
       type: String,
-      enum: ['date_mismatch', 'missing_role', 'skill_discrepancy', 'title_mismatch', 'other'],
       required: true,
     },
     description: { type: String, required: true },
     severity: {
       type: String,
-      enum: ['low', 'medium', 'high'],
       required: true,
     },
     resumeValue: { type: String, default: undefined },
@@ -251,8 +273,9 @@ const EmailVariantSchema = new Schema(
     openingHook: { type: String, default: '' },
     matchPoints: [{ type: String }],
     cta: { type: String, default: '' },
+    isFavorite: { type: Boolean, default: false },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const AnalysisSchema = new Schema<IAnalysis>(
@@ -262,6 +285,12 @@ const AnalysisSchema = new Schema<IAnalysis>(
       ref: 'User',
       required: [true, 'User ID is required'],
       index: true,
+    },
+    mode: {
+      type: String,
+      enum: ['resume_only', 'job_analysis', 'full_application'],
+      default: 'full_application',
+      required: true,
     },
     status: {
       type: String,
@@ -296,7 +325,10 @@ const AnalysisSchema = new Schema<IAnalysis>(
       linkedinData: { type: Schema.Types.Mixed, default: undefined },
     },
     target: {
-      linkedinUrl: { type: String, required: [true, 'Target LinkedIn URL is required'] },
+      linkedinUrl: {
+        type: String,
+        default: '',
+      },
       name: { type: String, default: '' },
       headline: { type: String, default: '' },
       company: { type: String, default: '' },
@@ -359,7 +391,6 @@ const AnalysisSchema = new Schema<IAnalysis>(
       company: { type: String },
       communicationStyle: {
         type: String,
-        enum: ['formal', 'casual', 'mixed'],
       },
       priorities: [{ type: String }],
       painPoints: [{ type: String }],
@@ -368,6 +399,34 @@ const AnalysisSchema = new Schema<IAnalysis>(
       culturalSignals: [{ type: String }],
     },
     generatedEmails: [EmailVariantSchema],
+    mode1Results: {
+      atsScore: { type: Number },
+      atsLabel: { type: String },
+      formattingIssues: [{
+        type: { type: String },
+        message: { type: String },
+      }],
+      missingSections: [{ type: String }],
+      weakBullets: [{
+        original: { type: String },
+        suggestion: { type: String },
+      }],
+      sectionScores: {
+        contactInfo: { type: Number },
+        formatting: { type: Number },
+        actionVerbs: { type: Number },
+        quantification: { type: Number },
+        sectionStructure: { type: Number },
+      },
+      overallVerdict: { type: String },
+    },
+    mode2Results: {
+      jobFitScore: { type: Number },
+      jobFitLabel: { type: String },
+      skillGaps: [{ type: String }],
+      experienceGaps: [{ type: String }],
+      recommendations: [{ type: String }],
+    },
   },
   {
     timestamps: true,

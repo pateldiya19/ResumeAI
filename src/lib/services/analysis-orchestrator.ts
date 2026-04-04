@@ -3,9 +3,10 @@ import Analysis, { IAnalysis } from '@/models/Analysis';
 import User from '@/models/User';
 import Project from '@/models/Project';
 import ModerationFlag from '@/models/ModerationFlag';
-import { callClaudeJSON } from '@/lib/claude';
+import { sanitizeResumeText } from '@/lib/utils/sanitize-resume';
+import { callGPTJSON } from '@/lib/openai';
 import { RESUME_STRUCTURER } from '@/lib/ai/prompts';
-import { scrapeLinkedInProfile, findEmailByLinkedIn } from '@/lib/apify';
+import { scrapeLinkedInProfile } from '@/lib/apify';
 import { normalizeLinkedInProfile } from '@/lib/parsers/linkedin-normalizer';
 import { parseJobDescription } from '@/lib/parsers/jd-parser';
 import { scoreATS } from '@/lib/ai/ats-scorer';
@@ -45,6 +46,7 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     // ---------------------------------------------------------------
     // STEP 1: SETUP
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Starting analysis ${analysisId}`);
     analysis.status = 'pending';
     await analysis.save();
 
@@ -77,9 +79,10 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     };
 
     try {
-      structuredResume = await callClaudeJSON(
+      const sanitizedResumeText = sanitizeResumeText(analysis.candidate.resumeText);
+      structuredResume = await callGPTJSON(
         RESUME_STRUCTURER,
-        analysis.candidate.resumeText,
+        sanitizedResumeText,
         { maxTokens: 4096, temperature: 0.1 }
       );
 
@@ -104,10 +107,12 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
         gpa: edu.gpa,
       }));
       analysis.candidate.skills = Array.isArray(structuredResume.skills)
-        ? structuredResume.skills
+        ? structuredResume.skills.map((s: unknown) => typeof s === 'string' ? s : typeof s === 'object' && s !== null ? (s as Record<string, string>).name || String(s) : String(s))
         : [];
       analysis.candidate.certifications = Array.isArray(structuredResume.certifications)
-        ? structuredResume.certifications
+        ? structuredResume.certifications.map((c: unknown) =>
+            typeof c === 'string' ? c : typeof c === 'object' && c !== null ? (c as Record<string, string>).name || JSON.stringify(c) : String(c)
+          )
         : [];
 
       await analysis.save();
@@ -122,7 +127,8 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     let candidateLinkedIn: NormalizedLinkedInProfile | null = null;
 
     if (analysis.candidate.linkedinUrl) {
-      analysis.status = 'scraping_candidate';
+      console.log(`[Pipeline] Step 3: Scraping candidate LinkedIn`);
+    analysis.status = 'scraping_candidate';
       await analysis.save();
 
       try {
@@ -155,6 +161,7 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     // ---------------------------------------------------------------
     // STEP 4: SCRAPE TARGET LINKEDIN (required)
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Step 4: Scraping target LinkedIn`);
     analysis.status = 'scraping_target';
     await analysis.save();
 
@@ -195,25 +202,29 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
       // Continue — we may still have the URL and can generate emails with limited data
     }
 
-    // Try to find target email separately (uses a fresh scrape or cached data)
-    try {
-      targetEmail = await findEmailByLinkedIn(analysis.target.linkedinUrl);
-      if (targetEmail) {
-        analysis.target.scrapedEmail = targetEmail;
+    // Extract email from raw scraped data (dev_fusion actor returns it as 'email' field)
+    if (analysis.target.rawData) {
+      const raw = analysis.target.rawData;
+      const email = raw.email || raw.emailAddress || raw.mail || raw.mobileNumber || null;
+      if (email && typeof email === 'string' && email.includes('@')) {
+        targetEmail = email;
+        analysis.target.scrapedEmail = email;
         await analysis.save();
+        console.log(`[Pipeline] Found target email: ${email.slice(0, 3)}***`);
+      } else {
+        console.log(`[Pipeline] No email found in scraped profile`);
       }
-    } catch (err) {
-      console.error('[Pipeline] Target email lookup failed:', err);
     }
 
     // ---------------------------------------------------------------
     // STEP 5: PARSE OR GENERATE JOB DESCRIPTION
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Step 5: Parsing JD`);
     analysis.status = 'parsing_jd';
     await analysis.save();
 
     try {
-      if (analysis.jobDescription.rawText && analysis.jobDescription.rawText.trim().length > 20) {
+      if (analysis.jobDescription?.rawText && analysis.jobDescription.rawText.trim().length > 20) {
         // User provided a JD — parse it
         const parsedJD = await parseJobDescription(analysis.jobDescription.rawText);
 
@@ -227,30 +238,22 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
         analysis.jobDescription.experienceLevel = parsedJD.experienceLevel;
         analysis.jobDescription.keywords = parsedJD.keywords;
       } else {
-        // No JD — generate one from target context
-        const generatedJD = await generateJobDescription({
-          targetName: analysis.target.name,
-          targetHeadline: analysis.target.headline,
-          targetCompany: analysis.target.company,
-          targetIndustry: analysis.target.industry,
-          targetSkills: analysis.target.skills,
-          candidateSkills: analysis.candidate.skills,
-          candidateExperience: analysis.candidate.experience.map((e) => ({
-            title: e.title,
-            company: e.company,
-          })),
-        });
-
-        analysis.jobDescription.source = 'ai_generated';
-        analysis.jobDescription.rawText = generatedJD.rawText || '';
-        analysis.jobDescription.title = generatedJD.title;
-        analysis.jobDescription.company = generatedJD.company;
-        analysis.jobDescription.requiredSkills = generatedJD.requiredSkills;
-        analysis.jobDescription.preferredSkills = generatedJD.preferredSkills;
-        analysis.jobDescription.responsibilities = generatedJD.responsibilities;
-        analysis.jobDescription.qualifications = generatedJD.qualifications;
-        analysis.jobDescription.experienceLevel = generatedJD.experienceLevel;
-        analysis.jobDescription.keywords = generatedJD.keywords;
+        // No JD provided — skip JD generation, proceed with what we have
+        console.log('[Pipeline] No JD provided, skipping JD generation');
+        if (!analysis.jobDescription) {
+          (analysis as any).jobDescription = {
+            source: 'user_provided',
+            rawText: '',
+            title: '',
+            company: '',
+            requiredSkills: [],
+            preferredSkills: [],
+            responsibilities: [],
+            qualifications: [],
+            experienceLevel: '',
+            keywords: [],
+          };
+        }
       }
 
       await analysis.save();
@@ -262,6 +265,7 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     // ---------------------------------------------------------------
     // STEP 6: SCORING (parallel)
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Step 6: Scoring (ATS + Job Fit)`);
     analysis.status = 'analyzing';
     await analysis.save();
 
@@ -276,15 +280,16 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
       summary: analysis.candidate.summary,
     };
 
+    const jd = analysis.jobDescription || {};
     const jdData = {
-      title: analysis.jobDescription.title,
-      company: analysis.jobDescription.company,
-      requiredSkills: analysis.jobDescription.requiredSkills,
-      preferredSkills: analysis.jobDescription.preferredSkills,
-      responsibilities: analysis.jobDescription.responsibilities,
-      qualifications: analysis.jobDescription.qualifications,
-      experienceLevel: analysis.jobDescription.experienceLevel,
-      keywords: analysis.jobDescription.keywords,
+      title: jd.title || '',
+      company: jd.company || '',
+      requiredSkills: jd.requiredSkills || [],
+      preferredSkills: jd.preferredSkills || [],
+      responsibilities: jd.responsibilities || [],
+      qualifications: jd.qualifications || [],
+      experienceLevel: jd.experienceLevel || '',
+      keywords: jd.keywords || [],
     };
 
     const scoringPromises: Promise<unknown>[] = [
@@ -364,6 +369,7 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     // ---------------------------------------------------------------
     // STEP 7: GENERATION (parallel)
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Step 7: Generating (resume, persona, emails)`);
     analysis.status = 'generating';
     await analysis.save();
 
@@ -383,9 +389,9 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
         experience: analysis.candidate.experience,
         skills: analysis.candidate.skills,
         education: analysis.candidate.education,
-        jobTitle: analysis.jobDescription.title,
-        requiredSkills: analysis.jobDescription.requiredSkills,
-        keywords: analysis.jobDescription.keywords,
+        jobTitle: jd.title || '',
+        requiredSkills: jd.requiredSkills || [],
+        keywords: jd.keywords || [],
         projects: highlightedProjects.map((p) => ({
           title: p.title,
           description: p.description,
@@ -393,26 +399,26 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
         })),
       }),
       buildPersona({
-        targetName: analysis.target.name,
-        targetHeadline: analysis.target.headline,
-        targetCompany: analysis.target.company,
-        targetIndustry: analysis.target.industry,
-        targetSummary: analysis.target.summary,
-        targetExperience: analysis.target.experience,
-        targetPosts: analysis.target.recentPosts,
-        targetSkills: analysis.target.skills,
+        targetName: analysis.target?.name || '',
+        targetHeadline: analysis.target?.headline || '',
+        targetCompany: analysis.target?.company || '',
+        targetIndustry: analysis.target?.industry || '',
+        targetSummary: analysis.target?.summary || '',
+        targetExperience: analysis.target?.experience || [],
+        targetPosts: analysis.target?.recentPosts || [],
+        targetSkills: analysis.target?.skills || [],
       }),
       generateEmails({
         candidateName: analysis.candidate.name,
         candidateHeadline: analysis.candidate.headline,
         candidateSkills: analysis.candidate.skills,
         candidateExperience: analysis.candidate.experience,
-        targetName: analysis.target.name,
-        targetHeadline: analysis.target.headline,
-        targetCompany: analysis.target.company,
-        targetIndustry: analysis.target.industry,
-        targetPosts: analysis.target.recentPosts,
-        jobTitle: analysis.jobDescription.title,
+        targetName: analysis.target?.name || '',
+        targetHeadline: analysis.target?.headline || '',
+        targetCompany: analysis.target?.company || '',
+        targetIndustry: analysis.target?.industry || '',
+        targetPosts: analysis.target?.recentPosts || [],
+        jobTitle: jd.title || '',
         matchPoints: jobFitResult?.strongMatches ?? [],
         overallScore: analysis.scores?.overallScore ?? 0,
       }),
@@ -468,6 +474,7 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
     // ---------------------------------------------------------------
     // STEP 9: COMPLETE
     // ---------------------------------------------------------------
+    console.log(`[Pipeline] Step 9: COMPLETE`);
     analysis.status = 'complete';
     await analysis.save();
 
@@ -475,9 +482,22 @@ export async function runAnalysisPipeline(analysisId: string): Promise<void> {
       lastActiveAt: new Date(),
     });
   } catch (err: any) {
-    console.error(`[Pipeline] Fatal error for analysis ${analysisId}:`, err);
-    analysis.status = 'failed';
-    analysis.errorMessage = err.message || 'An unexpected error occurred during analysis.';
-    await analysis.save();
+    console.error(`[Pipeline] Fatal error for analysis ${analysisId}:`, err?.message || err);
+    try {
+      analysis.status = 'failed';
+      analysis.errorMessage = err?.message || 'An unexpected error occurred during analysis.';
+      await analysis.save();
+    } catch (saveErr) {
+      console.error(`[Pipeline] Failed to save error status:`, saveErr);
+      // Last resort: direct update
+      try {
+        await Analysis.findByIdAndUpdate(analysisId, {
+          status: 'failed',
+          errorMessage: err?.message || 'Pipeline failed',
+        });
+      } catch (e2) {
+        console.error(`[Pipeline] Even direct update failed:`, e2);
+      }
+    }
   }
 }

@@ -16,6 +16,17 @@ export interface IUser extends Document {
   isBanned: boolean;
   banReason?: string;
   lastActiveAt: Date;
+  // Onboarding & profile fields
+  onboardingComplete: boolean;
+  resumeText: string;
+  resumeFileName: string;
+  linkedinUrl: string;
+  linkedinData: Record<string, unknown> | null;
+  parsedResume: Record<string, unknown> | null;
+  profileAnalysis: Record<string, unknown> | null;
+  profileLastUpdated: Date | null;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +107,47 @@ const UserSchema = new Schema<IUser>(
     lastActiveAt: {
       type: Date,
       default: Date.now,
+    },
+    // Onboarding & profile fields
+    onboardingComplete: {
+      type: Boolean,
+      default: false,
+    },
+    resumeText: {
+      type: String,
+      default: '',
+    },
+    resumeFileName: {
+      type: String,
+      default: '',
+    },
+    linkedinUrl: {
+      type: String,
+      default: '',
+    },
+    linkedinData: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+    parsedResume: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+    profileAnalysis: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+    profileLastUpdated: {
+      type: Date,
+      default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: undefined,
+    },
+    stripeSubscriptionId: {
+      type: String,
+      default: undefined,
     },
   },
   {

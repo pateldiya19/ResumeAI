@@ -35,6 +35,14 @@ export async function getAuthSession() {
     });
   }
 
+  // Re-check admin status on every call (in case ADMIN_EMAILS changed)
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+  const shouldBeAdmin = adminEmails.includes(dbUser.email.toLowerCase());
+  if (shouldBeAdmin && dbUser.role !== 'admin') {
+    dbUser.role = 'admin';
+    await dbUser.save();
+  }
+
   return {
     user: {
       id: dbUser._id.toString(),

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import type { AnalysisResponse } from '@/types/analysis';
+import type { AnalysisResponse, AnalysisMode } from '@/types/analysis';
 
 export function useAnalysis(id: string) {
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
@@ -45,10 +45,11 @@ export function useStartAnalysis() {
   const [error, setError] = useState<string | null>(null);
 
   const startAnalysis = async (data: {
+    mode?: AnalysisMode;
     resumeText: string;
     resumeFileName: string;
     candidateLinkedInUrl?: string;
-    targetLinkedInUrl: string;
+    targetLinkedInUrl?: string;
     jobDescriptionText?: string;
   }) => {
     setIsStarting(true);
