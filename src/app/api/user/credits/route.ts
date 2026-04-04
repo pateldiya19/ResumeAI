@@ -4,8 +4,8 @@ import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 
 const PLAN_LIMITS = {
-  free: { analyses: 3, sends: 5 },
-  pro: { analyses: 50, sends: 100 },
+  free: { analyses: 3, sends: 0 },
+  pro: { analyses: -1, sends: 10 },
   enterprise: { analyses: -1, sends: -1 }, // unlimited
 } as const;
 

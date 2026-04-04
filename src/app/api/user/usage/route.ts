@@ -5,8 +5,8 @@ import User from '@/models/User';
 import Analysis from '@/models/Analysis';
 
 const PLAN_LIMITS = {
-  free: { analyses: 3, sends: 5 },
-  pro: { analyses: 50, sends: 100 },
+  free: { analyses: 3, sends: 0 },
+  pro: { analyses: -1, sends: 10 },
   enterprise: { analyses: -1, sends: -1 },
 } as const;
 

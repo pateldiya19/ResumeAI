@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
     const user = await User.findById(session.user.id).select(
-      'name email avatar plan role createdAt lastActiveAt'
+      'name email avatar plan role createdAt lastActiveAt onboardingComplete parsedResume profileAnalysis linkedinData linkedinUrl resumeText resumeFileName profileLastUpdated'
     );
 
     if (!user) {
@@ -29,6 +29,14 @@ export async function GET(req: NextRequest) {
       role: user.role,
       createdAt: user.createdAt,
       lastActiveAt: user.lastActiveAt,
+      onboardingComplete: user.onboardingComplete,
+      parsedResume: user.parsedResume,
+      profileAnalysis: user.profileAnalysis,
+      linkedinData: user.linkedinData,
+      linkedinUrl: user.linkedinUrl,
+      resumeText: user.resumeText,
+      resumeFileName: user.resumeFileName,
+      profileLastUpdated: user.profileLastUpdated,
     });
   } catch (error) {
     console.error('GET /api/user/profile error:', error);
