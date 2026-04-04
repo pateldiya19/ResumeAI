@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, type FC } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Minus, Mail, Smile, Paperclip, Wand2, MoreHorizontal, Bold, Italic, Check, Copy, Heart,
+  X, Minus, Mail, Smile, Paperclip, Wand2, MoreHorizontal, Bold, Italic, Check, Copy, Heart, ExternalLink,
 } from 'lucide-react';
 
 export interface EmailCardData {
@@ -113,6 +113,15 @@ export const ComposeEmailCard: FC<ComposeEmailCardProps> = ({
           >
             {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
           </button>
+          {/* Send via Gmail (mailto) */}
+          <a
+            href={`mailto:?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.body)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+          >
+            <ExternalLink size={13} /> Send via Gmail
+          </a>
           {canSend && (
             <motion.button
               whileHover={{ scale: 1.02 }}
