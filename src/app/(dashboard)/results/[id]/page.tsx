@@ -565,7 +565,7 @@ export default function ResultsPage() {
                       key={idx}
                       data={{
                         from: { name: analysis.candidate?.name || 'You', email: '' },
-                        to: { name: analysis.target?.name || 'Recruiter', email: '' },
+                        to: { name: analysis.target?.name || 'Recruiter', email: (analysis as Record<string, unknown>).targetEmail as string || '' },
                         subject: email.subject,
                         body: email.body,
                         tone: email.tone,

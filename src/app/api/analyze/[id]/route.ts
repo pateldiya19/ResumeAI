@@ -44,6 +44,8 @@ export async function GET(
 
     const response: Record<string, unknown> = { ...analysis.toObject() };
     response.canSendEmail = canSendEmail;
+    // Include recruiter email for mailto link (only for the owner)
+    response.targetEmail = fullAnalysis?.target?.scrapedEmail || '';
     delete response.__v;
 
     return NextResponse.json(response);

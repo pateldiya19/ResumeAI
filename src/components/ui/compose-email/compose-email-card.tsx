@@ -115,12 +115,12 @@ export const ComposeEmailCard: FC<ComposeEmailCardProps> = ({
           </button>
           {/* Send via Gmail (mailto) */}
           <a
-            href={`mailto:?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.body)}`}
+            href={`mailto:${encodeURIComponent(data.to.email || '')}?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.body)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
           >
-            <ExternalLink size={13} /> Send via Gmail
+            <ExternalLink size={13} /> {data.to.email ? 'Send via Gmail' : 'Draft in Gmail'}
           </a>
           {canSend && (
             <motion.button
