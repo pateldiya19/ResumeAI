@@ -103,6 +103,7 @@ export interface ILinkedInPost {
   comments: number;
 }
 
+
 export interface IAnalysis extends Document {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
