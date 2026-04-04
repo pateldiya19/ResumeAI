@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 
 const GradientBlinds = dynamic(() => import('@/components/ui/gradient-blinds'), { ssr: false });
-// ScrollReveal and ScrollStack components available at @/components/ui/ if needed
+import BentoGrid from '@/components/landing/bento-grid';
 
 function Counter({ value, suffix = '' }: { value: number; suffix?: string }) {
   const ref = useRef(null);
@@ -260,6 +260,15 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </div>
+      </section>
+
+      {/* ── BENTO GRID ── */}
+      <section className="py-20 px-4 bg-black">
+        <div className="max-w-5xl mx-auto mb-16 text-center">
+          <p className="text-sm font-semibold text-brand-400 mb-3">How it works</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">Built for serious job seekers</h2>
+        </div>
+        <BentoGrid />
       </section>
 
       {/* ── METRICS ── */}

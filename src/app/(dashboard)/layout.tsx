@@ -7,16 +7,17 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, MessageCircle, Search, Clock, Mail, FolderKanban, Settings,
-  Menu, X, Shield, PanelLeftClose, PanelLeft, Plus, PenLine,
+  Menu, X, Shield, PanelLeftClose, PanelLeft, Plus, PenLine, Briefcase,
 } from 'lucide-react';
 import { PlanBadge } from '@/components/ui/plan-badge';
 import { cn } from '@/lib/cn';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Live Editor', href: '/editor', icon: PenLine },
   { label: 'AI Coach', href: '/chat', icon: MessageCircle },
   { label: 'Analyze', href: '/analyze', icon: Search },
-  { label: 'Resume Editor', href: '/editor', icon: PenLine },
+  { label: 'Job Scanner', href: '/jobs', icon: Briefcase },
   { label: 'History', href: '/history', icon: Clock },
   { label: 'Applications', href: '/applications', icon: Mail },
   { label: 'Projects', href: '/projects', icon: FolderKanban },
@@ -29,7 +30,8 @@ const pageTitles: Record<string, string> = {
   '/analyze/full-application': 'Full Application', '/onboarding': 'Welcome',
   '/history': 'History', '/applications': 'Applications', '/projects': 'Projects',
   '/settings': 'Settings',
-  '/editor': 'Resume Editor',
+  '/editor': 'Live Editor',
+  '/jobs': 'Job Scanner',
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -143,7 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {hoveredIndex === index && !isActive && (
                           <motion.span
                             layoutId="sidebar-hover-bg"
-                            className="absolute inset-0 z-0 bg-gray-50 rounded-lg"
+                            className="absolute inset-0 z-0 bg-gray-100/80 rounded-lg"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}

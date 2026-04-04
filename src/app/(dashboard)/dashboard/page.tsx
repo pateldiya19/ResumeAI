@@ -4,6 +4,8 @@ import { useUser } from '@clerk/nextjs';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AchievementBadges } from '@/components/dashboard/achievement-badges';
+import { LinkedInOptimizer } from '@/components/dashboard/linkedin-optimizer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -322,6 +324,12 @@ export default function DashboardPage() {
                 </div>
               </div>
             </Card>
+
+            {/* Badges */}
+            <AchievementBadges />
+
+            {/* LinkedIn Optimizer */}
+            <LinkedInOptimizer />
           </div>
         </div>
 

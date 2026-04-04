@@ -65,6 +65,12 @@ Scoring rules:
 
 export async function analyzeResumeOnly(resumeText: string): Promise<Mode1Result> {
   const cleanedText = sanitizeResumeText(resumeText);
+
+  // Run client-side scoring (same algorithm as the live editor)
+  const { clientSideScore } = await import('@/lib/editor/client-scorer');
+  const clientResult = clientSideScore(cleanedText);
+
+  // Run GPT for detailed analysis (issues, weak bullets, suggestions)
   const result = await callGPTJSON<Mode1Result>(
     MODE1_SYSTEM_PROMPT,
     `Here is the resume to analyze:\n\n${cleanedText}`,
@@ -72,7 +78,20 @@ export async function analyzeResumeOnly(resumeText: string): Promise<Mode1Result
   );
   validateAllScores(result as unknown as Record<string, unknown>);
 
-  // Normalize score labels for safety
+  // Use client-side score as the primary ATS score (consistent with live editor)
+  // Blend: 70% client-side + 30% GPT for consistency
+  result.ats_score = Math.round(clientResult.atsEstimate * 0.7 + result.ats_score * 0.3);
+
+  // Override section scores with client-side values for consistency
+  if (result.section_scores) {
+    result.section_scores.contact_info = Math.round((result.section_scores.contact_info + (clientResult.breakdown.structure > 60 ? 80 : 40)) / 2);
+    result.section_scores.formatting = Math.round((result.section_scores.formatting + clientResult.breakdown.formatting) / 2);
+    result.section_scores.action_verbs = Math.round((result.section_scores.action_verbs + clientResult.breakdown.actionVerbs) / 2);
+    result.section_scores.quantification = Math.round((result.section_scores.quantification + clientResult.breakdown.metrics) / 2);
+    result.section_scores.section_structure = Math.round((result.section_scores.section_structure + clientResult.breakdown.structure) / 2);
+  }
+
+  // Normalize labels based on blended score
   if (result.ats_score < 60) {
     result.ats_label = 'Needs Work';
     result.overall_verdict = 'Needs Work';
