@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthSession } from '@/lib/auth';
-import { callClaudeJSON } from '@/lib/claude';
+import { callGPTJSON } from '@/lib/openai';
 import { RESUME_STRUCTURER } from '@/lib/ai/prompts';
 import { rateLimit } from '@/lib/utils/rate-limiter';
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const structured = await callClaudeJSON(RESUME_STRUCTURER, resumeText.trim(), {
+    const structured = await callGPTJSON(RESUME_STRUCTURER, resumeText.trim(), {
       maxTokens: 4096,
       temperature: 0.1,
     });
