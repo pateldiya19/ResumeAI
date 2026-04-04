@@ -8,13 +8,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
 ]);
 
-const isAdminRoute = createRouteMatcher([
-  '/admin(.*)',
-  '/api/admin(.*)',
-]);
-
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
 
   // Allow public routes
   if (isPublicRoute(req)) {
@@ -31,16 +26,8 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Admin routes — check role from session claims
-  if (isAdminRoute(req)) {
-    const role = (sessionClaims?.metadata as { role?: string })?.role;
-    if (role !== 'admin') {
-      if (req.nextUrl.pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL('/dashboard', req.url));
-    }
-  }
+  // Admin auth is handled by the admin layout and API routes (they check MongoDB role)
+  // No middleware-level admin check needed since Clerk session doesn't have our DB role
 
   return NextResponse.next();
 });

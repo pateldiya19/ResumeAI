@@ -72,13 +72,13 @@ export default function AdminModerationPage() {
       <h1 className="text-2xl font-bold">Moderation Queue</h1>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 bg-zinc-900 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-white p-1 rounded-lg w-fit">
         {(['pending', 'approved', 'rejected', 'all'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={`px-4 py-2 text-sm font-medium rounded-md transition capitalize ${
-              filter === f ? 'bg-zinc-700 text-zinc-50' : 'text-zinc-400 hover:text-zinc-50'
+              filter === f ? 'bg-zinc-700 text-zinc-50' : 'text-gray-500 hover:text-zinc-50'
             }`}
           >
             {f}
@@ -92,32 +92,32 @@ export default function AdminModerationPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500" />
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center">
-          <p className="text-zinc-500">No {filter !== 'all' ? filter : ''} items in the queue.</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+          <p className="text-gray-400">No {filter !== 'all' ? filter : ''} items in the queue.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item._id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <div key={item._id} className="bg-white border border-gray-200 rounded-xl p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full uppercase">
+                    <span className="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full uppercase">
                       {item.type}
                     </span>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[item.status]}`}>
                       {item.status}
                     </span>
                   </div>
-                  <p className="text-sm text-zinc-300 mt-1">
+                  <p className="text-sm text-gray-700 mt-1">
                     By <span className="font-medium text-zinc-50">{item.userName}</span>
                   </p>
                 </div>
-                <span className="text-xs text-zinc-500">{new Date(item.createdAt).toLocaleDateString()}</span>
+                <span className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</span>
               </div>
 
               <p className="text-sm text-red-400 mb-2">Reason: {item.reason}</p>
-              <p className="text-sm text-zinc-400 bg-zinc-800/50 rounded-lg p-3 line-clamp-3">{item.content}</p>
+              <p className="text-sm text-gray-500 bg-gray-100/50 rounded-lg p-3 line-clamp-3">{item.content}</p>
 
               {item.status === 'pending' && (
                 <div className="flex gap-2 mt-4">
