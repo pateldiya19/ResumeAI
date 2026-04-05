@@ -23,6 +23,7 @@ export default function JobScannerPage() {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
   const [source, setSource] = useState<'indeed' | 'naukri' | 'both'>('indeed');
+  const [country, setCountry] = useState('IN');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -35,7 +36,7 @@ export default function JobScannerPage() {
     try {
       const res = await fetch('/api/jobs/scan', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, location, source }),
+        body: JSON.stringify({ query, location, source, country }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -69,6 +70,17 @@ export default function JobScannerPage() {
                 <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (e.g. Bangalore)" className="pl-9" />
               </div>
+              <select value={country} onChange={e => setCountry(e.target.value)}
+                className="h-10 px-3 rounded-xl border border-gray-200 text-sm bg-white">
+                <option value="IN">India</option>
+                <option value="US">USA</option>
+                <option value="GB">UK</option>
+                <option value="CA">Canada</option>
+                <option value="AU">Australia</option>
+                <option value="DE">Germany</option>
+                <option value="SG">Singapore</option>
+                <option value="AE">UAE</option>
+              </select>
               <select value={source} onChange={e => setSource(e.target.value as 'indeed' | 'naukri' | 'both')}
                 className="h-10 px-3 rounded-xl border border-gray-200 text-sm bg-white">
                 <option value="indeed">Indeed</option>

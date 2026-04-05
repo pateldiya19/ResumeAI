@@ -52,14 +52,14 @@ export async function POST(req: NextRequest) {
     const user = await User.findById(session.user.id).select('parsedResume');
     const userSkills: string[] = (user?.parsedResume as Record<string, unknown>)?.skills as string[] || [];
 
-    const { query, location, source } = await req.json() as { query: string; location: string; source: string };
+    const { query, location, source, country } = await req.json() as { query: string; location: string; source: string; country?: string };
     if (!query) return NextResponse.json({ error: 'Query required' }, { status: 400 });
 
     let jobs: ReturnType<typeof normalizeJob>[] = [];
 
     if (source === 'indeed' || source === 'both') {
       try {
-        const raw = await scrapeJobs(INDEED_ACTOR, { query, location: location || '', maxResults: 15, sort: 'date' });
+        const raw = await scrapeJobs(INDEED_ACTOR, { query, location: location || '', country: country || 'IN', maxResults: 15, sort: 'date' });
         jobs.push(...raw.map(r => normalizeJob(r, 'indeed')));
       } catch (err) { console.error('[Jobs] Indeed scrape failed:', err); }
     }
